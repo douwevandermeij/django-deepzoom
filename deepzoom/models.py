@@ -6,7 +6,8 @@ from django.contrib import admin
 import os
 import sys
 import codecs
-from string import punctuation as punctuation_marks
+# from string import punctuation as punctuation_marks
+import string
 import shutil
 
 from . import deepzoom
@@ -15,32 +16,43 @@ from . import deepzoom
 #===============================================================================
 
 
-def slugify(string_to_convert=None):
+# def slugify(string_to_convert=None):
+#     '''
+#     Custom slug generator.
+#
+#     Converts common separators ('-', '_', '.') into spaces, reduces consecutive
+#
+#     spaces to single spaces, deletes non-URL-compliant punctuation, lowercases,
+#
+#     strips leading spaces, and finally converts spaces into dashes.
+#
+#     E.g. " Hey!  What is this.py? " --> "hey-what-is-this-py"
+#     '''
+#     preserve_charmap = str.maketrans({'-': ' ', '_': ' ', '.': ' '})
+#
+#     invalid_charmap = str.maketrans(dict(zip(punctuation_marks, [None] * 32)))
+#
+#     substituted_string = string_to_convert.translate(preserve_charmap)
+#
+#     reduced_string = ' '.join(substituted_string.split())
+#
+#     translated_string = reduced_string.translate(invalid_charmap)
+#
+#     converted_string = translated_string.strip().lower().replace(' ', '-')
+#
+#     return(converted_string)
+def slugify(_string_to_convert=None):
     '''
     Custom slug generator.
-    
-    Converts common separators ('-', '_', '.') into spaces, reduces consecutive 
-    
-    spaces to single spaces, deletes non-URL-compliant punctuation, lowercases,  
-    
-    strips leading spaces, and finally converts spaces into dashes.
-    
-    E.g. " Hey!  What is this.py? " --> "hey-what-is-this-py"
     '''
-    preserve_charmap = str.maketrans({'-': ' ', '_': ' ', '.': ' '})
-    
-    invalid_charmap = str.maketrans(dict(zip(punctuation_marks, [None] * 32)))
-    
-    substituted_string = string_to_convert.translate(preserve_charmap)
-    
-    reduced_string = ' '.join(substituted_string.split())
-    
-    translated_string = reduced_string.translate(invalid_charmap)
-    
-    converted_string = translated_string.strip().lower().replace(' ', '-')
-    
-    return(converted_string)
-#end slugify 
+    _valid_chars = "-() %s%s" % (string.ascii_letters, string.digits)
+    _valid_chars = frozenset(_valid_chars)
+
+    _converted_string = string.join((c for c in _string_to_convert if c in \
+    _valid_chars), '').lower().replace(' ', '-')
+
+    return(_converted_string)
+#end slugify
 
 
 #===============================================================================

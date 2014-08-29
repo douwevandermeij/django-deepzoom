@@ -42,6 +42,9 @@ import sys
 import urllib.request, urllib.error, urllib.parse
 import xml.dom.minidom
 
+from django.core.files.storage import default_storage as storage
+
+
 NS_DEEPZOOM = "http://schemas.microsoft.com/deepzoom/2008"
 
 resize_filter_map = {
@@ -81,7 +84,7 @@ class DZIDescriptor(object):
 
     def save(self, destination):
         """Save descriptor file."""
-        file = open(destination, "w")
+        file = storage.open(destination, "w")
 
         doc = xml.dom.minidom.Document()
         image = doc.createElementNS(NS_DEEPZOOM, "Image")
@@ -212,7 +215,7 @@ class ImageCreator(object):
                 format = self.descriptor.tile_format
                 tile_path = os.path.join(level_dir,
                                          "%s_%s.%s"%(column, row, format))
-                tile_file = open(tile_path, "wb")
+                tile_file = storage.open(tile_path, "wb")
                 if self.descriptor.tile_format == "jpg":
                     tile.save(tile_file, "JPEG",
                               quality=int(self.image_quality * 100))
@@ -290,7 +293,7 @@ class CollectionCreator(object):
                     tile_image = PILImage.new("RGB", (self.tile_size, self.tile_size))
                     tile_image.save(tile_path, "JPEG", quality=int(self.image_quality * 100))
                 tile_image = PILImage.open(tile_path)
-                source_path = open(os.path.splitext(path)[0] + "_files/" + str(level) + "/%s_%s.%s"%(0, 0, descriptor.tile_format))
+                source_path = storage.open(os.path.splitext(path)[0] + "_files/" + str(level) + "/%s_%s.%s"%(0, 0, descriptor.tile_format))
                 source_image = PILImage.open(source_path)
                 images_per_tile = int(math.floor(self.tile_size / level_size))
                 column, row = self._get_position(i)
@@ -341,7 +344,7 @@ class CollectionCreator(object):
 
         descriptor = doc.toxml(encoding="UTF-8")
 #        descriptor = doc.toprettyxml(indent="  ", encoding="UTF-8")
-        file = open(destination, "w")
+        file = storage.open(destination, "w")
         file.write(descriptor)
         file.close()
 

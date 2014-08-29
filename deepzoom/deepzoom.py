@@ -192,7 +192,8 @@ class ImageCreator(object):
 
     def create(self, source, destination):
         """Creates Deep Zoom image from source file and saves it to destination."""
-        self.image = PILImage.open(source)
+        fp = storage.open(source, 'r')
+        self.image = PILImage.open(fp)
         width, height = self.image.size
         self.descriptor = DZIDescriptor(width=width,
                                         height=height,

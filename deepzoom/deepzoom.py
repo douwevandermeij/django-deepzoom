@@ -39,7 +39,6 @@ import optparse
 import os
 from PIL import Image as PILImage
 import sys
-import urllib.request, urllib.error, urllib.parse
 import xml.dom.minidom
 
 from django.core.files.storage import default_storage as storage

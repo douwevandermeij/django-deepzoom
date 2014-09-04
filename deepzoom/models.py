@@ -2,11 +2,12 @@
 from django.db import models
 from django.conf import settings
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
 
 import os
 import sys
 import codecs
-from string import punctuation as punctuation_marks
+import string
 import shutil
 
 from . import deepzoom
@@ -15,32 +16,18 @@ from . import deepzoom
 #===============================================================================
 
 
-def slugify(string_to_convert=None):
+def slugify(_string_to_convert=None):
     '''
     Custom slug generator.
-    
-    Converts common separators ('-', '_', '.') into spaces, reduces consecutive 
-    
-    spaces to single spaces, deletes non-URL-compliant punctuation, lowercases,  
-    
-    strips leading spaces, and finally converts spaces into dashes.
-    
-    E.g. " Hey!  What is this.py? " --> "hey-what-is-this-py"
     '''
-    preserve_charmap = str.maketrans({'-': ' ', '_': ' ', '.': ' '})
-    
-    invalid_charmap = str.maketrans(dict(zip(punctuation_marks, [None] * 32)))
-    
-    substituted_string = string_to_convert.translate(preserve_charmap)
-    
-    reduced_string = ' '.join(substituted_string.split())
-    
-    translated_string = reduced_string.translate(invalid_charmap)
-    
-    converted_string = translated_string.strip().lower().replace(' ', '-')
-    
-    return(converted_string)
-#end slugify 
+    _valid_chars = "-() %s%s" % (string.ascii_letters, string.digits)
+    _valid_chars = frozenset(_valid_chars)
+
+    _converted_string = string.join((c for c in _string_to_convert if c in \
+    _valid_chars), '').lower().replace(' ', '-')
+
+    return(_converted_string)
+#end slugify
 
 
 #===============================================================================
@@ -110,35 +97,35 @@ class DeepZoom(models.Model):
         if not (self.deepzoom_image and self.deepzoom_xml):
             #Try to load deep zoom parameters, otherwise assign default values.
             try:
-                (tile_size, 
-                 tile_overlap, 
-                 tile_format, 
-                 image_quality, 
+                (tile_size,
+                 tile_overlap,
+                 tile_format,
+                 image_quality,
                  resize_filter) = settings.DEEPZOOM_PARAMS
             except:
-                (tile_size, 
-                 tile_overlap, 
-                 tile_format, 
-                 image_quality, 
+                (tile_size,
+                 tile_overlap,
+                 tile_format,
+                 image_quality,
                  resize_filter) = self.DEFAULT_DEEPZOOM_PARAMS
-            
+
             #Initialize deep zoom creator.
-            creator = deepzoom.ImageCreator(tile_size, 
-                                            tile_overlap, 
-                                            tile_format, 
-                                            image_quality, 
+            creator = deepzoom.ImageCreator(tile_size,
+                                            tile_overlap,
+                                            tile_format,
+                                            image_quality,
                                             resize_filter)
-            
+
             dz_filename = self.name + '.dzi'
-            
+
             #Try to load deep zoom root, otherwise assign default value.
             try:
                 dz_deepzoom_root = settings.DEEPZOOM_ROOT
             except:
                 dz_deepzoom_root = self.DEFAULT_DEEPZOOM_ROOT
-            
+
             dz_mediaroot = os.path.join(settings.MEDIA_ROOT, dz_deepzoom_root)
-            
+
             #Create deep zoom media root if defined but not physically created.
             if not os.path.isdir(dz_mediaroot):
                 try:
@@ -149,12 +136,15 @@ class DeepZoom(models.Model):
                     print("I/O error({0}): {1}".format(err.errno, err.strerror))
                 except:
                     raise
-            
+
             dz_relfilepath = os.path.join(dz_deepzoom_root, self.name)
             dz_relfilename = os.path.join(dz_relfilepath, dz_filename)
             dz_fullfilepath = os.path.join(settings.MEDIA_ROOT, dz_relfilepath)
             dz_fullfilename = os.path.join(dz_fullfilepath, dz_filename)
-            
+
+            if os.path.exists(os.path.dirname(dz_fullfilename)):
+                shutil.rmtree(os.path.dirname(dz_fullfilename))
+
             #Process deep zoom image and save to file system.
             try:
                 creator.create(self.associated_image, dz_fullfilename)
@@ -168,7 +158,7 @@ class DeepZoom(models.Model):
 
             self.deepzoom_image = dz_relfilename
             self.deepzoom_path = dz_fullfilepath
-            
+
             #Read generated XML metadata and save to deepzoom_xml for template use.
             try:
                 with codecs.open(dz_fullfilename, "r", "utf-8-sig") as dz_file:
@@ -223,10 +213,10 @@ class UploadedImage(models.Model):
         return (os.path.join(uploaded_image_root, filename))
     
     
-    uploaded_image = models.ImageField(upload_to=get_uploaded_image_root, 
-                                       height_field='height', 
+    uploaded_image = models.ImageField(upload_to=get_uploaded_image_root,
+                                       height_field='height',
                                        width_field='width')
-    
+
     name = models.CharField("Image Name", 
                             max_length=64, 
                             unique=True, 
@@ -239,11 +229,11 @@ class UploadedImage(models.Model):
     height = models.PositiveIntegerField("Image Height", 
                                          editable=False, 
                                          help_text="Auto-filled by PIL.")
-    
+
     width = models.PositiveIntegerField("Image Width", 
                                         editable=False, 
                                         help_text="Auto-filled by PIL.")
-    
+
     #Optionally generate deep zoom from image if set to True.
     create_deepzoom = models.BooleanField(default=False, 
                                           help_text="Generate deep zoom?")
@@ -273,8 +263,8 @@ class UploadedImage(models.Model):
         else:
             self.slug = self.slug
         
-        if (not self.create_deepzoom):
-            super(UploadedImage, self).save(*args, **kwargs)
+        if not self.create_deepzoom:
+            return super(UploadedImage, self).save(*args, **kwargs)
         
         #Create deep zoom tiled image and link this image to it.
         if self.create_deepzoom and not self.deepzoom_already_created:
@@ -282,7 +272,7 @@ class UploadedImage(models.Model):
                 self.create_deepzoom = False
                 self.deepzoom_already_created = True
                 super(UploadedImage, self).save(*args, **kwargs)
-                dz = DeepZoom(associated_image=self.uploaded_image.path, 
+                dz = DeepZoom(associated_image=self.uploaded_image.path,
                               name=self.name)
                 dz.save()
                 #self.associated_deepzoom = dz
@@ -316,6 +306,9 @@ class TestImage(UploadedImage):
     Test class included solely for testing.  Feel free to delete it or change it
     if you've no need to run the app tests.
     '''
+    class Meta:
+        verbose_name = _('Deep Zoom Upload')
+        verbose_name_plural = _('Deep Zoom Uploads')
 #end TestImage
 
 

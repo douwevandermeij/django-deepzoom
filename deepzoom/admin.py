@@ -19,6 +19,8 @@ class DeepZoomAdmin(admin.ModelAdmin):
     readonly_fields = ('name', 'slug', 'deepzoom_image', 'created',)
     actions = [delete_selected]
 #end DeepZoomAdmin
+admin.site.register(models.DeepZoom, DeepZoomAdmin)
 
+admin.site.register(models.TestImage)
 
 #EOF django-deepzoom admin

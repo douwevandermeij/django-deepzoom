@@ -288,14 +288,12 @@ class UploadedImage(models.Model):
                 except:
                     dz_deepzoom_root = DeepZoom.DEFAULT_DEEPZOOM_ROOT
 
-                dz_mediaroot = os.path.join(settings.MEDIA_ROOT, dz_deepzoom_root)
-
                 if deepzoom_s3_rsync:
                     os.system('boto-rsync --delete -a {0} -s {1} {3} s3://{2}/{3}'.format(
                         settings.AWS_ACCESS_KEY_ID,
                         settings.AWS_SECRET_ACCESS_KEY,
                         settings.AWS_STORAGE_BUCKET_NAME,
-                        dz_mediaroot,
+                        'media/' + dz_deepzoom_root,
                     ))
 
                 #self.associated_deepzoom = dz

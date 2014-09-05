@@ -277,6 +277,27 @@ class UploadedImage(models.Model):
                 dz = DeepZoom(associated_image=self.uploaded_image.path,
                               name=self.name)
                 dz.save()
+
+                try:
+                    deepzoom_s3_rsync = settings.DEEPZOOM_S3_RSYNC
+                except:
+                    deepzoom_s3_rsync = False
+
+                try:
+                    dz_deepzoom_root = settings.DEEPZOOM_ROOT
+                except:
+                    dz_deepzoom_root = DeepZoom.DEFAULT_DEEPZOOM_ROOT
+
+                dz_mediaroot = os.path.join(settings.MEDIA_ROOT, dz_deepzoom_root)
+
+                if deepzoom_s3_rsync:
+                    os.system('boto-rsync --delete -a {0} -s {1} {3} s3://{2}/{3}'.format(
+                        settings.AWS_ACCESS_KEY_ID,
+                        settings.AWS_SECRET_ACCESS_KEY,
+                        settings.AWS_STORAGE_BUCKET_NAME,
+                        dz_mediaroot,
+                    ))
+
                 #self.associated_deepzoom = dz
             except (TypeError, ValueError):
                 # self.associated_deepzoom = None

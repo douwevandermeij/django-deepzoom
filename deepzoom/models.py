@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from django.core.files.storage import FileSystemStorage
 
 import os
 import sys
@@ -215,7 +216,8 @@ class UploadedImage(models.Model):
     
     uploaded_image = models.ImageField(upload_to=get_uploaded_image_root,
                                        height_field='height',
-                                       width_field='width')
+                                       width_field='width',
+                                       storage=FileSystemStorage(location=settings.MEDIA_ROOT))
 
     name = models.CharField("Image Name", 
                             max_length=64, 

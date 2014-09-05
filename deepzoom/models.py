@@ -237,8 +237,8 @@ class UploadedImage(models.Model):
                                         help_text="Auto-filled by PIL.")
 
     #Optionally generate deep zoom from image if set to True.
-    create_deepzoom = models.BooleanField(default=False, 
-                                          help_text="Generate deep zoom?")
+    # create_deepzoom = models.BooleanField(default=False,
+    #                                       help_text="Generate deep zoom?")
     
     deepzoom_already_created = models.BooleanField(default=False, 
                                                    editable=False)
@@ -265,11 +265,12 @@ class UploadedImage(models.Model):
         else:
             self.slug = self.slug
         
-        if not self.create_deepzoom:
-            return super(UploadedImage, self).save(*args, **kwargs)
+        # if not self.create_deepzoom:
+        #     return super(UploadedImage, self).save(*args, **kwargs)
         
         #Create deep zoom tiled image and link this image to it.
-        if self.create_deepzoom and not self.deepzoom_already_created:
+        # if self.create_deepzoom and not self.deepzoom_already_created:
+        if not self.deepzoom_already_created:
             try:
                 self.create_deepzoom = False
                 self.deepzoom_already_created = True

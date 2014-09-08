@@ -272,7 +272,7 @@ class UploadedImage(models.Model):
         # if self.create_deepzoom and not self.deepzoom_already_created:
         if not self.deepzoom_already_created:
             try:
-                self.create_deepzoom = False
+                # self.create_deepzoom = False
                 self.deepzoom_already_created = True
                 super(UploadedImage, self).save(*args, **kwargs)
                 dz = DeepZoom(associated_image=self.uploaded_image.path,

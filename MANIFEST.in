@@ -7,3 +7,4 @@ recursive-include deepzoom/static *
 recursive-include deepzoom/templates *
 recursive-include deepzoom/templatetags *
 recursive-include deepzoom/test *
+recursive-include deepzoom/migrations *
